@@ -1,10 +1,13 @@
-mod state;
+mod docs;
+mod fake_gen;
 mod initialize;
 mod mock_router;
-mod fake_gen;
-mod docs;
+mod state;
 
-use axum::{Router, routing::{get, post}};
+use axum::{
+    Router,
+    routing::{get, post},
+};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -20,6 +23,13 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    let mut args = pico_args::Arguments::from_env();
+    let port: u16 = args
+        .opt_value_from_str("--port")
+        .unwrap_or(None)
+        .or_else(|| std::env::var("PORT").ok().and_then(|v| v.parse().ok()))
+        .unwrap_or(3000);
+
     let state = Arc::new(RwLock::new(AppState::default()));
 
     let app = Router::new()
@@ -29,8 +39,9 @@ async fn main() {
         .with_state(state.clone())
         .fallback(mock_router::fallback_handler(state));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    tracing::info!("Listening on http://0.0.0.0:3000");
-    tracing::info!("API docs at http://0.0.0.0:3000/_docs");
+    let addr = format!("0.0.0.0:{}", port);
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    tracing::info!("Listening on http://{}", addr);
+    tracing::info!("API docs at http://{addr}/_docs");
     axum::serve(listener, app).await.unwrap();
 }

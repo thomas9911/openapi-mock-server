@@ -1,6 +1,6 @@
 # swagger-mock-server
 
-A Rust service that mocks an API based on an OpenAPI v3 spec. It generates realistic fake data from schemas using field name heuristics (emails, names, phone numbers, UUIDs, etc.).
+A Rust service that mocks an API based on an OpenAPI v2 or v3 spec. It generates realistic fake data from schemas using field name heuristics (emails, names, phone numbers, UUIDs, etc.).
 
 ## Usage
 
@@ -8,9 +8,13 @@ A Rust service that mocks an API based on an OpenAPI v3 spec. It generates reali
 
 ```bash
 cargo run
+# CLI flag (takes precedence):
+cargo run -- --port 8080
+# or via env var:
+PORT=8080 cargo run
 ```
 
-Listens on `http://0.0.0.0:3000`.
+Listens on `http://0.0.0.0:3000` by default.
 
 ### Initialize with a spec
 
@@ -26,7 +30,7 @@ Or use the included script:
 ./initialize.sh
 ```
 
-Accepts JSON or YAML. Re-POST at any time to swap the spec.
+Accepts JSON or YAML, OpenAPI v2 or v3. Re-POST at any time to swap the spec.
 
 ### Call mock endpoints
 

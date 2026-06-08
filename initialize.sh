@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
-curl -s -X POST http://localhost:3000/_initialize \
+PORT=${PORT:-3000}
+curl -s -X POST "http://localhost:${PORT}/_initialize" \
   -H 'Content-Type: application/json' \
   -d @openapi.json | jq .

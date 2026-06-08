@@ -1,5 +1,5 @@
-use fake::{Fake, faker};
 use fake::RngExt;
+use fake::{Fake, faker};
 
 use serde_json::{Value, json};
 
@@ -27,7 +27,8 @@ pub fn generate_from_schema(schema: &Value, field_name: Option<&str>) -> Value {
                 for sub in all_of {
                     if sub.get("type").is_some() || sub.get("properties").is_some() {
                         let generated = generate_from_schema(sub, field_name);
-                        if let (Some(m), Some(g)) = (merged.as_object_mut(), generated.as_object()) {
+                        if let (Some(m), Some(g)) = (merged.as_object_mut(), generated.as_object())
+                        {
                             for (k, v) in g {
                                 m.insert(k.clone(), v.clone());
                             }
@@ -56,12 +57,8 @@ fn generate_string(schema: &Value, field_name: Option<&str>) -> Value {
 
     if let Some(fmt) = schema.get("format").and_then(Value::as_str) {
         return match fmt {
-            "date-time" => {
-                Value::String(chrono::Utc::now().to_rfc3339())
-            }
-            "date" => {
-                Value::String(chrono::Utc::now().format("%Y-%m-%d").to_string())
-            }
+            "date-time" => Value::String(chrono::Utc::now().to_rfc3339()),
+            "date" => Value::String(chrono::Utc::now().format("%Y-%m-%d").to_string()),
             "email" => {
                 let email: String = faker::internet::en::FreeEmail().fake();
                 Value::String(email)
@@ -94,11 +91,17 @@ fn generate_string_by_field_name(field_name: Option<&str>) -> String {
         let n: String = faker::name::en::FirstName().fake();
         return n;
     }
-    if name == "lastname" || name == "last_name" || name == "surname" || name == "familyname" || name == "family_name" {
+    if name == "lastname"
+        || name == "last_name"
+        || name == "surname"
+        || name == "familyname"
+        || name == "family_name"
+    {
         let n: String = faker::name::en::LastName().fake();
         return n;
     }
-    if name == "fullname" || name == "full_name" || name == "displayname" || name == "display_name" {
+    if name == "fullname" || name == "full_name" || name == "displayname" || name == "display_name"
+    {
         let n: String = faker::name::en::Name().fake();
         return n;
     }
@@ -115,7 +118,8 @@ fn generate_string_by_field_name(field_name: Option<&str>) -> String {
     }
 
     // Address patterns
-    if name.contains("street") || name == "address" || name == "address1" || name == "address_line" {
+    if name.contains("street") || name == "address" || name == "address1" || name == "address_line"
+    {
         let a: String = faker::address::en::StreetName().fake();
         return a;
     }
@@ -153,11 +157,20 @@ fn generate_string_by_field_name(field_name: Option<&str>) -> String {
     }
 
     // Description/text patterns
-    if name.contains("description") || name.contains("bio") || name.contains("about") || name.contains("summary") {
+    if name.contains("description")
+        || name.contains("bio")
+        || name.contains("about")
+        || name.contains("summary")
+    {
         let s: String = faker::lorem::en::Sentence(5..10).fake();
         return s;
     }
-    if name.contains("content") || name.contains("body") || name.contains("message") || name.contains("text") || name.contains("note") {
+    if name.contains("content")
+        || name.contains("body")
+        || name.contains("message")
+        || name.contains("text")
+        || name.contains("note")
+    {
         let s: String = faker::lorem::en::Paragraph(1..3).fake();
         return s;
     }
@@ -167,14 +180,20 @@ fn generate_string_by_field_name(field_name: Option<&str>) -> String {
     }
 
     // Company patterns
-    if name.contains("company") || name.contains("organization") || name.contains("organisation") || name.contains("employer") {
+    if name.contains("company")
+        || name.contains("organization")
+        || name.contains("organisation")
+        || name.contains("employer")
+    {
         let c: String = faker::company::en::CompanyName().fake();
         return c;
     }
 
     // Color patterns
     if name.contains("color") || name.contains("colour") {
-        let colors = ["red", "blue", "green", "yellow", "purple", "orange", "black", "white"];
+        let colors = [
+            "red", "blue", "green", "yellow", "purple", "orange", "black", "white",
+        ];
         let idx = rand::rng().random_range(0..colors.len());
         return colors[idx].to_string();
     }
@@ -186,7 +205,10 @@ fn generate_string_by_field_name(field_name: Option<&str>) -> String {
 
 fn generate_number(schema: &Value) -> Value {
     let min = schema.get("minimum").and_then(Value::as_f64).unwrap_or(0.0);
-    let max = schema.get("maximum").and_then(Value::as_f64).unwrap_or(1000.0);
+    let max = schema
+        .get("maximum")
+        .and_then(Value::as_f64)
+        .unwrap_or(1000.0);
     let is_integer = schema.get("type").and_then(Value::as_str) == Some("integer");
 
     if is_integer {

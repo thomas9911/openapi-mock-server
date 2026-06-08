@@ -1,8 +1,8 @@
 use axum::{
+    Json,
     extract::State,
     http::{StatusCode, header},
     response::{IntoResponse, Response},
-    Json,
 };
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -14,12 +14,24 @@ pub async fn handle_spec(State(state): State<Arc<RwLock<AppState>>>) -> impl Int
     match &st.raw_spec {
         Some(spec) => {
             let mut spec = spec.clone();
-            // Override servers so Swagger UI calls our mock, not the original API
+            // Override server so Swagger UI calls our mock, not the original API
             if let Some(obj) = spec.as_object_mut() {
-                obj.insert(
-                    "servers".to_string(),
-                    serde_json::json!([{ "url": "/", "description": "Mock server" }]),
-                );
+                let is_v2 = obj
+                    .get("swagger")
+                    .and_then(|v| v.as_str())
+                    .map(|v| v.starts_with('2'))
+                    .unwrap_or(false);
+
+                if is_v2 {
+                    obj.insert("host".to_string(), serde_json::json!("localhost:3000"));
+                    obj.insert("basePath".to_string(), serde_json::json!("/"));
+                    obj.insert("schemes".to_string(), serde_json::json!(["http"]));
+                } else {
+                    obj.insert(
+                        "servers".to_string(),
+                        serde_json::json!([{ "url": "/", "description": "Mock server" }]),
+                    );
+                }
             }
             (StatusCode::OK, Json(spec)).into_response()
         }

@@ -52,9 +52,15 @@ src/
 
 **Add a new format handler** — edit the `fmt` match in `generate_string` in `fake_gen.rs`.
 
-**Change port** — `main.rs:29`, the `TcpListener::bind` address.
+**Change port** — pass `--port <n>` CLI flag or set `PORT=<n>` env var. CLI takes precedence. Default is `3000`.
 
-**Support OpenAPI v2 (Swagger)** — `initialize.rs` parses paths the same way; v2 uses `definitions` instead of `components/schemas` and `produces`/`consumes` instead of `content`. Would need a conversion step before `extract_routes`.
+**Add a new internal endpoint** — register a `get`/`post` route in `main.rs` before the fallback, add a handler in the appropriate module or a new file, wire up `with_state` if it needs `AppState`.
+
+**OpenAPI v2 (Swagger 2.0)** — supported. v2 response schemas sit directly on the response object (`responses.200.schema`); v3 wraps them under `content.application/json.schema`. Both are handled in `extract_success_response`. `$ref` resolution works for both `#/definitions/` and `#/components/schemas/` since it just traverses JSON keys.
+
+**Swap the spec at runtime** — re-POST to `/_initialize`. The existing routes are replaced atomically via `RwLock` write lock.
+
+**Support a new HTTP method** — add it to the `methods` array in `extract_routes` in `initialize.rs`.
 
 ## Build & run
 

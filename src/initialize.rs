@@ -1,9 +1,4 @@
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -107,11 +102,23 @@ fn extract_success_response(operation: &Value, spec: &Value) -> (Option<Value>, 
     // Resolve $ref if needed
     let resp = resolve_ref(resp, spec).unwrap_or(resp);
 
-    // Try to get application/json content
+    // v2: response schema is directly on the response object
+    if let Some(schema) = resp.get("schema") {
+        let resolved_schema = resolve_ref(schema, spec)
+            .map(|s| s.clone())
+            .or_else(|| Some(schema.clone()));
+        return (resolved_schema, None);
+    }
+
+    // v3: schema is under content.application/json
     let content = resp
         .get("content")
         .and_then(|c| c.get("application/json"))
-        .or_else(|| resp.get("content").and_then(|c| c.as_object()).and_then(|m| m.values().next()));
+        .or_else(|| {
+            resp.get("content")
+                .and_then(|c| c.as_object())
+                .and_then(|m| m.values().next())
+        });
 
     let media = match content {
         Some(m) => m,
@@ -151,7 +158,11 @@ fn resolve_ref<'a>(value: &'a Value, spec: &'a Value) -> Option<&'a Value> {
         return None;
     }
 
-    let parts: Vec<&str> = ref_str.trim_start_matches('#').split('/').filter(|s| !s.is_empty()).collect();
+    let parts: Vec<&str> = ref_str
+        .trim_start_matches('#')
+        .split('/')
+        .filter(|s| !s.is_empty())
+        .collect();
     let mut current = spec;
     for part in parts {
         current = current.get(part)?;

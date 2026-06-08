@@ -1,23 +1,23 @@
 use axum::{
+    Json,
     body::Body,
     extract::Request,
     http::{Method, StatusCode},
     response::{IntoResponse, Response},
-    Json,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::state::AppState;
 use crate::fake_gen::generate_from_schema;
+use crate::state::AppState;
 
 pub fn fallback_handler(
     state: Arc<RwLock<AppState>>,
 ) -> impl Fn(Request<Body>) -> std::pin::Pin<Box<dyn std::future::Future<Output = Response> + Send>>
-       + Clone
-       + Send
-       + 'static {
++ Clone
++ Send
++ 'static {
     move |req: Request<Body>| {
         let state = state.clone();
         Box::pin(async move {
@@ -71,7 +71,10 @@ fn find_route<'a>(
     let method_str = method.as_str();
 
     // Exact match first (no path params)
-    if let Some(r) = routes.iter().find(|r| r.method == method_str && r.path == path) {
+    if let Some(r) = routes
+        .iter()
+        .find(|r| r.method == method_str && r.path == path)
+    {
         return Some((r, HashMap::new()));
     }
 
@@ -181,7 +184,10 @@ fn resolve_ref_in_spec(ref_str: &str, spec: &serde_json::Value) -> Option<serde_
     Some(resolve_schema_refs(current, &Some(spec.clone())))
 }
 
-fn resolve_schema_refs(schema: &serde_json::Value, spec: &Option<serde_json::Value>) -> serde_json::Value {
+fn resolve_schema_refs(
+    schema: &serde_json::Value,
+    spec: &Option<serde_json::Value>,
+) -> serde_json::Value {
     if let Some(ref_str) = schema.get("$ref").and_then(serde_json::Value::as_str) {
         if let Some(s) = spec {
             if let Some(resolved) = resolve_ref_in_spec(ref_str, s) {
