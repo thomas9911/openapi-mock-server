@@ -1,0 +1,2 @@
+Create a rust service that mocks an api based on a swaggerfile/ openapi. Create an tokio+axum http server. Have an endpoint POST /_initialize that takes in the swaggerfile and build the metadata. Afterwards the endpoint defined in the swaggerfile are setup and return the same response that is defined in the swaggerfile/openapi. use the https://crates.io/crates/fake
+Crucially the api should not need an api-key/authorization.
