@@ -40,7 +40,8 @@ src/
 
 ## Conventions
 
-- No auth — all security schemes are ignored
+- No auth on mock endpoints — all security schemes in the spec are ignored
+- `/_initialize` is protected by `API_KEY` env var if set; key is passed as plain `Authorization` header
 - `$ref` only resolves local refs (`#/components/...`); external refs return null
 - Path params are coerced: numeric strings → JSON number, else string
 - `name` alone is too generic for a person name — falls through to lorem word
@@ -53,6 +54,8 @@ src/
 **Add a new format handler** — edit the `fmt` match in `generate_string` in `fake_gen.rs`.
 
 **Change port** — pass `--port <n>` CLI flag or set `PORT=<n>` env var. CLI takes precedence. Default is `3000`.
+
+**Enable API key protection** — set `API_KEY=<key>` env var on startup. The key is stored in `AppState.api_key` and checked in `handle_initialize` against the plain `Authorization` header. If unset, `/_initialize` is open.
 
 **Add a new internal endpoint** — register a `get`/`post` route in `main.rs` before the fallback, add a handler in the appropriate module or a new file, wire up `with_state` if it needs `AppState`.
 

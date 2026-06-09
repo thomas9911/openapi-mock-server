@@ -8,13 +8,14 @@ A Rust service that mocks an API based on an OpenAPI v2 or v3 spec. It generates
 
 ```bash
 cargo run
-# CLI flag (takes precedence):
+# custom port — CLI flag takes precedence over env var:
 cargo run -- --port 8080
-# or via env var:
 PORT=8080 cargo run
+# with API key protection on /_initialize:
+API_KEY=secret cargo run
 ```
 
-Listens on `http://0.0.0.0:3000` by default.
+Listens on `http://0.0.0.0:3000` by default. If `API_KEY` is not set, `/_initialize` is unprotected.
 
 ### Initialize with a spec
 
@@ -79,7 +80,7 @@ Format hints in the schema (`format: email`, `date-time`, `uuid`, `uri`) take pr
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/_initialize` | Load an OpenAPI v3 spec (JSON or YAML) |
+| `POST` | `/_initialize` | Load an OpenAPI v2/v3 spec (JSON or YAML). Protected by `API_KEY` if set. |
 | `GET` | `/_docs` | Swagger UI |
 | `GET` | `/_spec` | Current spec JSON |
 | `*` | everything else | Mocked responses |
