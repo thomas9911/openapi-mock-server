@@ -12,4 +12,5 @@ pub struct RouteSpec {
 pub struct AppState {
     pub routes: Vec<RouteSpec>,
     pub raw_spec: Option<Value>,
+    pub api_key: Option<String>,
 }

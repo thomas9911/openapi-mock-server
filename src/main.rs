@@ -30,7 +30,14 @@ async fn main() {
         .or_else(|| std::env::var("PORT").ok().and_then(|v| v.parse().ok()))
         .unwrap_or(3000);
 
-    let state = Arc::new(RwLock::new(AppState::default()));
+    let api_key = std::env::var("API_KEY").ok();
+    if api_key.is_some() {
+        tracing::info!("API key protection enabled for /_initialize");
+    } else {
+        tracing::warn!("No API_KEY set — /_initialize is unprotected");
+    }
+
+    let state = Arc::new(RwLock::new(AppState { api_key, ..Default::default() }));
 
     let app = Router::new()
         .route("/_initialize", post(initialize::handle_initialize))

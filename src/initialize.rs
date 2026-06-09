@@ -1,4 +1,4 @@
-use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
+use axum::{Json, extract::State, http::{StatusCode, HeaderMap}, response::IntoResponse};
 use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -7,10 +7,26 @@ use crate::state::{AppState, RouteSpec};
 
 pub async fn handle_initialize(
     State(state): State<Arc<RwLock<AppState>>>,
+    headers: HeaderMap,
     body: String,
 ) -> impl IntoResponse {
-    let spec: Value = match serde_json::from_str(&body)
-        .or_else(|_| yaml_serde::from_str::<Value>(&body).map_err(|e| e.to_string()))
+    {
+        let st = state.read().await;
+        if let Some(ref expected) = st.api_key {
+            let provided = headers
+                .get("authorization")
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("");
+            dbg!(expected, provided);
+            if provided != expected {
+                return (
+                    StatusCode::UNAUTHORIZED,
+                    Json(serde_json::json!({ "error": "Invalid or missing API key" })),
+                );
+            }
+        }
+    }
+    let spec: Value = match yaml_serde::from_str::<Value>(&body).map_err(|e| e.to_string())
     {
         Ok(v) => v,
         Err(e) => {
